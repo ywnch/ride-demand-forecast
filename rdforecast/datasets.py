@@ -8,6 +8,7 @@ def load_training_data(filepath=None):
         print("'filepath' not given, download data from:", filepath)
     data = pd.read_csv(filepath, compression='infer')
     print("Data loaded.")
+    print('TAZ:', len(set(data['geohash6'])))
     print("N:", len(data))
     print(data.head(3))
     return data
@@ -23,8 +24,8 @@ def check_sanity(df):
     else:
         print('No missing values found.')
 
-    assert df['demand'].min() >= 0
-    assert df['demand'].max() <= 1
+    assert df['demand'].min() >= 0, 'Demand < 0 found in data.'
+    assert df['demand'].max() <= 1, 'Demand > 1 found in data.'
     print('First day in sequence:', df['day'].min())
     print('Last day in sequence:', df['day'].max())
 
@@ -52,19 +53,43 @@ def split_train_test(df, n_days=14, path=None):
     return df_train, df_test
 
 
-def convert_datetime(df):
-    # from datetime import datetime, timedelta
-    # print('Converting datetime features...')
-    # df['datetime'] = df['timestamp'].apply(lambda x: datetime.strptime(x, '%H:%M').time())
-    # df['date'] = df['datetime'].dt.date
-    # df['time'] = df['datetime'].dt.time
-    # print('Done.')
-    # return df
+def process_timestamp(data, add_time=False):
+    """Extract time featrues from timestamp.
 
+    Params
+    ------
+    add_time (bool): include a time-formatted column
 
-def preprocess():
-    pass
+    Returns
+    -------
+    df (dataframe): with time features (all sequential features starting from 0)
+        - timestep: quarters throughout the whole period
+        - weekly: timestep repeated in weekly cycle
+        - quarter: quarter sequence in a day
+        - hour: hour sequence in a day (may not align with actual hour in the timezone)
+        - dow: day sequence in a week (may not align with actual weekday/end)
+        - time: timestamp in datetime.time data type
+    """
+    df = data.copy(deep=True)
+    ts = df['timestamp'].unique()
+    h, m = zip(*[t.split(':') for t in ts])
+    h = np.array([int(i) for i in h])
+    m = np.array([int(i) for i in m])
+    ts_num = (h * 60 + m) / 15
+    ts_to_num = dict(zip(ts, ts_num))
+    df['timestep'] = ((df['day'] - 1) * 96 + data['timestamp'].map(ts_to_num))
+    df['timestep'] = df['timestep'].astype(int)
+    df['weekly'] = df['timestep'] % 672
+    df['quarter'] = df['timestep'] % 96
+    df['hour'] = [int(t.split(':')[0]) for t in df['timestamp']]
+    df['dow'] = df['day'] % 7
 
+    if add_time:
+        from datetime import timedelta
+        try:
+            tmp = df['quarter'] * timedelta(minutes=15)
+            df['time'] = pd.to_datetime(tmp).dt.time
+        except TypeError:
+            print('`time` not added, try using pandas 0.24.1.')
 
-def split():
-    pass
+    return df
