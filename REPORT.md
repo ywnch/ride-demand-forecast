@@ -50,6 +50,7 @@
 - Some errors come from a mismtach during a surge. The prediction often does not catch up as much as the actual surge
 - Aside from that, TAZs with small errors are not necessarily as well-predicted as one thought, while zones with large errors may not be as bad. One instance of such is that, zeros are easy to get, and in zones that have lower demands, sticking to the floor (predicting a small value) yields a small error (since the actual normalized demands are also little as well).
 - Overall, the long-term performance (7-14 days) of the model looks promising and stable. But it is unclear how it will perform in a rapidly-growing city, where the overall trend is not stationary. The short-term performance (1 hour), which is actually the real challenge to respond in a short time, might not look too bad, but it may depend on the actual counts of the demand. say a TAZ has 10 demands within 15 minutes, then maybe a RMSE of 0.029 is accetable.
+- However, this also raises a concern that the short-term evaluation results can suffer from large variance from timestep to timestep. During model development, the evaluation is always conducted in a long-term manner, the performance is thus rather stable, but the time window is only 5-timestep wide in the hold-out evaluation. Therefore, it is possible that the outcome can be far off from what we get in the model developing process. For example, predicting midnight or peak hour, can potentially have a bad outcome. As a result, it is important to modify the evaluation method later on.
 
 ## Resources
 
