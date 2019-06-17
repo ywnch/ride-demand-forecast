@@ -1,3 +1,6 @@
+# Author: Yuwen Chang
+
+
 import numpy as np
 import pandas as pd
 
@@ -112,65 +115,9 @@ def process_timestamp(data, add_time=False, fix=False):
     return df
 
 
-def expand_timestep(df, test_data):
-    """Expand data to include full timesteps for all TAZs, filled with zeros.
-
-    Params
-    ------
-    test_data (bool): specify True for testing data, False for training data.
-                      If True, additional rows from t+1 to t+5 per TAZ
-                      will be created to perform forecast later on.
-    """
-    # expand all TAZs by full timesteps
-    min_ts = int(df['timestep'].min())
-    max_ts = int(df['timestep'].max())
-    if test_data:
-        print('Expanding testing data and fill NaNs with '
-              '0 demands for all timesteps per TAZ; '
-              'also generating T+1 to T+5 slots for forecasting...')
-        timesteps = list(range(min_ts, max_ts + 6))
-    else:
-        print('Expanding training data and fill NaNs with '
-              '0 demands for all timesteps per TAZ...')
-        timesteps = list(range(min_ts, max_ts + 1))
-    print('Might take a couple of minutes... :)')
-    full_df = pd.concat([pd.DataFrame({'geohash6': taz,
-                                       'timestep': timesteps})
-                         for taz in df['geohash6'].unique()],
-                        ignore_index=True,
-                        sort=False)
-
-    # merge back fixed features: TAZ-based, timestep-based
-    taz_info = ['geohash6', 'label_weekly_raw', 'label_weekly',
-                'label_daily', 'label_quarterly', 'active_rate', 'lon', 'lat']
-    ts_info = ['day', 'timestep', 'weekly', 'quarter', 'hour', 'dow']
-    demand_info = ['geohash6', 'timestep', 'demand']
-
-    full_df = full_df.merge(df[taz_info].drop_duplicates(),
-                            how='left', on=['geohash6'])
-    full_df = full_df.merge(df[ts_info].drop_duplicates(),
-                            how='left', on=['timestep'])
-
-    # NOTE: there are 9 missing timesteps:
-    #       1671, 1672, 1673, 1678, 1679, 1680, 1681, 1682, 1683
-    #       also, the new t+1 to t+5 slots in test data will miss out ts_info
-    # a = set(df['timestep'].unique())
-    # b = set(timesteps)
-    # print(a.difference(b))
-    # print(b.difference(a))
-
-    # fix missing timestep-based information:
-    missing = full_df[full_df['day'].isna()]
-    patch = process_timestamp(missing, fix=True)
-    full_df.fillna(patch, inplace=True)
-
-    # merge row-dependent feature: demand
-    full_df = full_df.merge(df[demand_info].drop_duplicates(),
-                            how='left', on=['geohash6', 'timestep'])
-    full_df['demand'].fillna(0, inplace=True)
-
-    print('Done.')
-    print('Missing values:')
-    print(full_df.isna().sum())
-
-    return full_df
+def tstep_to_tstamp(tsteps):
+    tmp = np.array(tsteps) % 96
+    h = tmp // 4
+    m = (tmp % 4) * 15
+    tstamps = ['{}:{}'.format(h, m) for h, m in zip(h, m)]
+    return tstamps
