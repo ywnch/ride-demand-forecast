@@ -6,7 +6,7 @@
 
 ### Temporal
 
-- Most features are extracted from historical demands per TAZ, and they dominant feature importances (may also due to the fact that they are mostly continuous features). Some examples are T-1 (when applicable), T-2 (when applicable), T-5, T - 1 day, T - 1 week, and there interacting terms.
+- Most features are extracted from historical demands per TAZ, and they dominant feature importances (may also due to the fact that they are mostly continuous features). Some examples are T-1 (when applicable), T-2 (when applicable), T-5, T-1 day, T-1 week, and their interacting terms.
 - Features that are not always available should be mitigated to avoid model failure when conducting actual forecasting. For example, 40% of the T-1 are removed (set to $-1$) for training.
 - Weekend (inferred), hour (as categorical), weekly (repeating timestep in 1-week cycle) also share some importances. Semantic indicators for time periods (e.g., peak hours, midnight) did not play out well and were removed.
 
@@ -25,7 +25,7 @@
 
 - Since the data is anonymized in various ways (date, time, location), typical external semantic data is not available here (e.g., demographics, public transport, weather, POI, event, road network, holidays, etc.).
 - In order to resolve this, and also accommodating the lack of spatial features, TAZ functions and seasonalities are inferred by clustering temporal patterns. In other words, the clustering label indicates TAZs that share similar trends and can be modelled as similar zones to enhance the forecast.
-- At least one such label, which is the unnormalized weekly-cycle timestep (``label_weekly_raw`), turns out to show high importance in the model.
+- At least one such label, which is the unnormalized weekly-cycle timestep (`label_weekly_raw`), turns out to show high importance in the model.
 - Later on, it may worth trying creating multiple models for respective zone labels. During the experiments, predicting only TAZs with the same label often has a lower RMSE.
 
 ## Model
@@ -49,7 +49,7 @@
 - General speaking, there is roughly a 16% improvement for the LGBM model as compared to the historical average baseline, which is the best baseline that is directly applicable for forecasting.
 - Some errors come from a mismtach during a surge. The prediction often does not catch up as much as the actual surge
 - Aside from that, TAZs with small errors are not necessarily as well-predicted as one thought, while zones with large errors may not be as bad. One instance of such is that, zeros are easy to get, and in zones that have lower demands, sticking to the floor (predicting a small value) yields a small error (since the actual normalized demands are also little as well).
-- Overall, the long-term performance (7-14 days) of the model looks promising and stable. But it is unclear how it will perform in a rapidly-growing city, where the overall trend is not stationary. The short-term performance (1 hour), which is actually the real challenge to respond in a short time, might not look too bad, but it may depend on the actual counts of the demand. say a TAZ has 10 demands within 15 minutes, then maybe a RMSE of 0.029 is accetable.
+- Overall, the long-term performance (7-14 days) of the model looks promising and stable. But it is unclear how it will perform in a rapidly-growing city, where the overall trend is not stationary. The short-term performance (1 hour), which is actually the real challenge to respond in a short time, might not look too bad, but it may depend on the actual counts of the demand. say a TAZ has 10 demands within 15 minutes, then maybe a RMSE of 0.029 is acceptable.
 - However, this also raises a concern that the short-term evaluation results can suffer from large variance from timestep to timestep. During model development, the evaluation is always conducted in a long-term manner, the performance is thus rather stable, but the time window is only 5-timestep wide in the hold-out evaluation. Therefore, it is possible that the outcome can be far off from what we get in the model developing process. For example, predicting midnight or peak hour, can potentially have a bad outcome. As a result, it is important to modify the evaluation method later on.
 
 ## Resources
@@ -69,6 +69,7 @@
 - [Forecasting at Uber: An Introduction](https://eng.uber.com/forecasting-introduction/)
 - [How to deal with the seasonality of a market?](https://eng.lyft.com/how-to-deal-with-the-seasonality-of-a-market-584cc94d6b75)
 - [Identifying the numbers of AR or MA terms in an ARIMA model](http://people.duke.edu/~rnau/411arim3.htm)
+- [What is LightGBM, How to implement it? How to fine tune the parameters?](https://medium.com/@pushkarmandot/https-medium-com-pushkarmandot-what-is-lightgbm-how-to-implement-it-how-to-fine-tune-the-parameters-60347819b7fc)
 - [ARIMA/SARIMA vs LSTM with Ensemble learning Insights for Time Series Data](https://towardsdatascience.com/arima-sarima-vs-lstm-with-ensemble-learning-insights-for-time-series-data-509a5d87f20a)
 - [Understanding LSTM and its quick implementation in keras for sentiment analysis](https://towardsdatascience.com/understanding-lstm-and-its-quick-implementation-in-keras-for-sentiment-analysis-af410fd85b47)
 - [M4 Forecasting Competition: Introducing a New Hybrid ES-RNN Model](https://eng.uber.com/m4-forecasting-competition/)

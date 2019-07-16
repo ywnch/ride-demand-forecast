@@ -4,7 +4,7 @@
 
 ## Usage
 
-Download or clone the repo, follow step-by-step instructions in the [main notebook](./main.ipynb) to generate forecast outputs.
+Download or clone the repo, follow step-by-step instructions in the [main notebook](./main.ipynb) to generate forecast outputs. Refer to this [brief development report](./REPORT.md) for details regarding features, methods, and results.
 
 ## Hardware
 
